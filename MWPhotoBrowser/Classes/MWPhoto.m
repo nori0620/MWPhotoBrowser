@@ -18,7 +18,10 @@
 
     // Image
     UIImage *_underlyingImage;
-
+    
+    // disable decode
+    BOOL _disableDecode;
+    
     // Other
     NSString *_caption;
     BOOL _loadingInProgress;
@@ -76,6 +79,10 @@ caption = _caption;
 		_photoURL = [url copy];
 	}
 	return self;
+}
+
+- (void) disableDecode {
+    _disableDecode = true;
 }
 
 - (void)dealloc {
@@ -149,11 +156,11 @@ caption = _caption;
 // Called on main
 - (void)imageDidFinishLoadingSoDecompress {
     NSAssert([[NSThread currentThread] isMainThread], @"This method must be called on the main thread.");
-    if (self.underlyingImage) {
+    if (self.underlyingImage && !_disableDecode) {
         // Decode image async to avoid lagging when UIKit lazy loads
         [[SDWebImageDecoder sharedImageDecoder] decodeImage:self.underlyingImage withDelegate:self userInfo:nil];
     } else {
-        // Failed
+        // Failed or _disableDecode
         [self imageLoadingComplete];
     }
 }

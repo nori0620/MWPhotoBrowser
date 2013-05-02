@@ -30,5 +30,8 @@
 - (id)initWithFilePath:(NSString *)path;
 - (id)initWithURL:(NSURL *)url;
 
+// accessor
+- (void) disableDecode;
+
 @end
 
