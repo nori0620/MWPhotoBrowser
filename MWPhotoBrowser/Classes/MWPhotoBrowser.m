@@ -42,8 +42,9 @@
 	// Navigation & controls
 	UIToolbar *_toolbar;
 	NSTimer *_controlVisibilityTimer;
-	UIBarButtonItem *_previousButton, *_nextButton, *_actionButton;
-    UIActionSheet *_actionsSheet;
+	UIBarButtonItem *_previousButton, *_nextButton, *_actionButton, *_deleteButton;
+    UIActionSheet *_otherActionsSheet;
+    UIActionSheet *_deleteActionsSheet;
     MBProgressHUD *_progressHUD;
     
     // Appearance
@@ -56,6 +57,7 @@
     
     // Misc
     BOOL _displayActionButton;
+    BOOL _displayDeleteButton;
 	BOOL _performingLayout;
 	BOOL _rotating;
     BOOL _viewIsActive; // active as in it's in the view heirarchy
@@ -136,7 +138,8 @@
 @synthesize previousNavBarTintColor = _previousNavBarTintColor;
 @synthesize navigationBarBackgroundImageDefault = _navigationBarBackgroundImageDefault,
 navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandscapePhone;
-@synthesize displayActionButton = _displayActionButton, actionsSheet = _actionsSheet;
+@synthesize displayActionButton = _displayActionButton, actionsSheet = _otherActionsSheet;
+@synthesize displayDeleteButton = _displayDeleteButton;
 @synthesize progressHUD = _progressHUD;
 @synthesize previousViewControllerBackButton = _previousViewControllerBackButton;
 
@@ -157,6 +160,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
         _recycledPages = [[NSMutableSet alloc] init];
         _photos = [[NSMutableArray alloc] init];
         _displayActionButton = NO;
+        _displayDeleteButton = NO;
         _didSavePreviousStateOfNavBar = NO;
         
         // Listen for MWPhoto notifications
@@ -195,6 +199,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 	[_previousButton release];
 	[_nextButton release];
     [_actionButton release];
+    [_deleteButton release];
   	[_depreciatedPhotoData release];
     [self releaseAllUnderlyingPhotos];
     [[SDImageCache sharedImageCache] clearMemory]; // clear memory
@@ -253,6 +258,8 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
     _nextButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"MWPhotoBrowser.bundle/images/UIBarButtonItemArrowRight.png"] style:UIBarButtonItemStylePlain target:self action:@selector(gotoNextPage)];
     _actionButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(actionButtonPressed:)];
     
+    _deleteButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemTrash target:self action:@selector(deleteButtonPressed:)];
+    
     // Update
     [self reloadData];
     
@@ -272,7 +279,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
     [_recycledPages removeAllObjects];
     
     // Toolbar
-    if (numberOfPhotos > 1 || _displayActionButton) {
+    if (numberOfPhotos > 1 || _displayActionButton || _displayDeleteButton) {
         [self.view addSubview:_toolbar];
     } else {
         [_toolbar removeFromSuperview];
@@ -283,13 +290,32 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
     fixedLeftSpace.width = 32; // To balance action button
     UIBarButtonItem *flexSpace = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:self action:nil] autorelease];
     NSMutableArray *items = [[NSMutableArray alloc] init];
-    if (_displayActionButton) [items addObject:fixedLeftSpace];
+    
+    
+    
+    if (_displayActionButton){
+        [items addObject:_actionButton];
+    }else{
+        [items addObject:flexSpace];
+    }
+    
     [items addObject:flexSpace];
+    
+    
     if (numberOfPhotos > 1) [items addObject:_previousButton];
     [items addObject:flexSpace];
+    
     if (numberOfPhotos > 1) [items addObject:_nextButton];
+    
     [items addObject:flexSpace];
-    if (_displayActionButton) [items addObject:_actionButton];
+    
+    if (_displayDeleteButton){
+        [items addObject:_deleteButton];
+    } else{
+        [items addObject:flexSpace];
+    }
+    
+    
     [_toolbar setItems:items];
     [items release];
 	[self updateNavigation];
@@ -989,10 +1015,33 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
     [self dismissModalViewControllerAnimated:YES];
 }
 
-- (void)actionButtonPressed:(id)sender {
-    if (_actionsSheet) {
+- (void)deleteButtonPressed:(id)sender {
+    if (_deleteActionsSheet) {
         // Dismiss
-        [_actionsSheet dismissWithClickedButtonIndex:_actionsSheet.cancelButtonIndex animated:YES];
+        [_deleteActionsSheet dismissWithClickedButtonIndex:_deleteActionsSheet.cancelButtonIndex animated:YES];
+    } else {
+            _deleteActionsSheet  = [
+                 [[UIActionSheet alloc] initWithTitle:nil
+                                             delegate:self
+                                    cancelButtonTitle:NSLocalizedString(@"Cancel", nil)
+                               destructiveButtonTitle:NSLocalizedString(@"Delete" ,nil )
+                                    otherButtonTitles: nil
+                  ] autorelease
+            ];
+            _deleteActionsSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
+            if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+                [_deleteActionsSheet showFromBarButtonItem:sender animated:YES];
+            } else {
+                [_deleteActionsSheet showInView:self.view];
+            }
+            
+    }
+}
+
+- (void)actionButtonPressed:(id)sender {
+    if (_otherActionsSheet) {
+        // Dismiss
+        [_otherActionsSheet dismissWithClickedButtonIndex:_otherActionsSheet.cancelButtonIndex animated:YES];
     } else {
         id <MWPhoto> photo = [self photoAtIndex:_currentPageIndex];
         if ([self numberOfPhotos] > 0 && [photo underlyingImage]) {
@@ -1010,11 +1059,11 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
                                                         cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil
                                                         otherButtonTitles:NSLocalizedString(@"Save", nil), NSLocalizedString(@"Copy", nil), nil] autorelease];
             }
-            _actionsSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
+            _otherActionsSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
             if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
-                [_actionsSheet showFromBarButtonItem:sender animated:YES];
+                [_otherActionsSheet showFromBarButtonItem:sender animated:YES];
             } else {
-                [_actionsSheet showInView:self.view];
+                [_otherActionsSheet showInView:self.view];
             }
             
         }
@@ -1024,7 +1073,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 #pragma mark - Action Sheet Delegate
 
 - (void)actionSheet:(UIActionSheet *)actionSheet didDismissWithButtonIndex:(NSInteger)buttonIndex {
-    if (actionSheet == _actionsSheet) {           
+    if (actionSheet == _otherActionsSheet) {           
         // Actions 
         self.actionsSheet = nil;
         if (buttonIndex != actionSheet.cancelButtonIndex) {
@@ -1035,6 +1084,12 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
             } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 2) {
                 [self emailPhoto]; return;
             }
+        }
+    }
+    if (actionSheet == _deleteActionsSheet ) {
+        _deleteActionsSheet = nil;
+        if( buttonIndex == 0){
+            [self deletePhoto];
         }
     }
     [self hideControlsAfterDelay]; // Continue as normal...
@@ -1125,6 +1180,12 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
         [self showProgressHUDWithMessage:[NSString stringWithFormat:@"%@\u2026" , NSLocalizedString(@"Preparing", @"Displayed with ellipsis as 'Preparing...' when an item is in the process of being prepared")]];
         [self performSelector:@selector(actuallyEmailPhoto:) withObject:photo afterDelay:0];
     }
+}
+
+- (void) deletePhoto {
+    id <MWPhoto> photo = [self photoAtIndex:_currentPageIndex];
+    [_delegate didClickDeleteButtonWithIndex:_currentPageIndex];
+    NSLog( @"deletePhoto:%@",_photos);
 }
 
 - (void)actuallyEmailPhoto:(id<MWPhoto>)photo {
