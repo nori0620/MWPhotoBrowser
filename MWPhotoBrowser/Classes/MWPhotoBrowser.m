@@ -245,13 +245,17 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 	
     // Toolbar
     _toolbar = [[UIToolbar alloc] initWithFrame:[self frameForToolbarAtOrientation:self.interfaceOrientation]];
-    _toolbar.tintColor = nil;
-    if ([[UIToolbar class] respondsToSelector:@selector(appearance)]) {
-        [_toolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsDefault];
-        [_toolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsLandscapePhone];
+    if ([_delegate respondsToSelector:@selector(decoratePhotoBrowserToobar:)]) {
+        [_delegate decoratePhotoBrowserToobar:_toolbar];
+    }else{
+        _toolbar.tintColor = nil;
+        if ([[UIToolbar class] respondsToSelector:@selector(appearance)]) {
+            [_toolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsDefault];
+            [_toolbar setBackgroundImage:nil forToolbarPosition:UIToolbarPositionAny barMetrics:UIBarMetricsLandscapePhone];
+        }
+        _toolbar.barStyle = UIBarStyleBlackTranslucent;
+        _toolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
     }
-    _toolbar.barStyle = UIBarStyleBlackTranslucent;
-    _toolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
     
     // Toolbar Items
     _previousButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"MWPhotoBrowser.bundle/images/UIBarButtonItemArrowLeft.png"] style:UIBarButtonItemStylePlain target:self action:@selector(gotoPreviousPage)];
@@ -436,6 +440,10 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 #pragma mark - Nav Bar Appearance
 
 - (void)setNavBarAppearance:(BOOL)animated {
+    if ([_delegate respondsToSelector:@selector(decoratePhotoBrowserNavigationBar:)]) {
+        [_delegate decoratePhotoBrowserNavigationBar: self.navigationController.navigationBar];
+        return;
+    }
     self.navigationController.navigationBar.tintColor = nil;
     self.navigationController.navigationBar.barStyle = UIBarStyleBlackTranslucent;
     if ([[UINavigationBar class] respondsToSelector:@selector(appearance)]) {

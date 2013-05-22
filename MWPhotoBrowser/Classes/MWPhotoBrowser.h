@@ -27,6 +27,8 @@
 @optional
 - (MWCaptionView *)photoBrowser:(MWPhotoBrowser *)photoBrowser captionViewForPhotoAtIndex:(NSUInteger)index;
 - (BOOL) didClickDeleteButtonWithIndex:(NSUInteger)index;
+- (void) decoratePhotoBrowserNavigationBar:(UINavigationBar *) navigationBar;
+- (void) decoratePhotoBrowserToobar:(UIToolbar *) toolBar;
 @end
 
 // MWPhotoBrowser
