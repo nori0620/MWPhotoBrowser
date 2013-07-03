@@ -11,6 +11,7 @@
 #import "MWZoomingScrollView.h"
 #import "MBProgressHUD.h"
 #import "SDImageCache.h"
+#import "SNSPost.h"
 
 #define SYSTEM_VERSION_EQUAL_TO(v)                  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedSame)
 #define SYSTEM_VERSION_GREATER_THAN(v)              ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedDescending)
@@ -43,6 +44,7 @@
 	UIToolbar *_toolbar;
 	NSTimer *_controlVisibilityTimer;
 	UIBarButtonItem *_previousButton, *_nextButton, *_actionButton, *_deleteButton;
+    UIActionSheet *_shareActionsSheet;
     UIActionSheet *_otherActionsSheet;
     UIActionSheet *_deleteActionsSheet;
     MBProgressHUD *_progressHUD;
@@ -1058,15 +1060,10 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
             [self setControlsHidden:NO animated:YES permanent:YES];
             
             // Sheet
-            if ([MFMailComposeViewController canSendMail]) {
-                self.actionsSheet = [[[UIActionSheet alloc] initWithTitle:nil delegate:self
+            self.actionsSheet = [[[UIActionSheet alloc] initWithTitle:nil delegate:self
                                                         cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil
-                                                        otherButtonTitles:NSLocalizedString(@"Save", nil), NSLocalizedString(@"Copy", nil), NSLocalizedString(@"Email", nil), nil] autorelease];
-            } else {
-                self.actionsSheet = [[[UIActionSheet alloc] initWithTitle:nil delegate:self
-                                                        cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil
-                                                        otherButtonTitles:NSLocalizedString(@"Save", nil), NSLocalizedString(@"Copy", nil), nil] autorelease];
-            }
+                                                        otherButtonTitles:NSLocalizedString(@"Save", nil), NSLocalizedString(@"Copy", nil),
+                                                        NSLocalizedString(@"Share", nil), nil] autorelease];
             _otherActionsSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
             if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
                 [_otherActionsSheet showFromBarButtonItem:sender animated:YES];
@@ -1090,7 +1087,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
             } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 1) {
                 [self copyPhoto]; return;	
             } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 2) {
-                [self emailPhoto]; return;
+                [self showSharePhotoActionSheet]; return;
             }
         }
     }
@@ -1098,6 +1095,20 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
         _deleteActionsSheet = nil;
         if( buttonIndex == 0){
             [self deletePhoto];
+        }
+    }
+    if (actionSheet == _shareActionsSheet) {
+        _shareActionsSheet = nil;
+        if (buttonIndex != actionSheet.cancelButtonIndex) {
+            if (buttonIndex == actionSheet.firstOtherButtonIndex) {
+                [self postToSnsWithSnsType:@"line"]; return;
+            } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 1) {
+                [self postToSnsWithSnsType:@"twitter"]; return;
+            } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 2) {
+                [self postToSnsWithSnsType:@"facebook"]; return;
+            } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 3) {
+                [self emailPhoto]; return;
+            }
         }
     }
     [self hideControlsAfterDelay]; // Continue as normal...
@@ -1190,10 +1201,52 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
     }
 }
 
+- (void)showSharePhotoActionSheet{
+    if (_shareActionsSheet) {
+        // Dismiss
+        [_shareActionsSheet dismissWithClickedButtonIndex:_shareActionsSheet.cancelButtonIndex animated:YES];
+    } else {
+        if ([MFMailComposeViewController canSendMail]) {
+                _shareActionsSheet = [[[UIActionSheet alloc] initWithTitle:nil delegate:self
+                                    cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil
+                                    otherButtonTitles:NSLocalizedString(@"LINE", nil),
+                                                      NSLocalizedString(@"twitter", nil),
+                                                      NSLocalizedString(@"facebook", nil),
+                                                      NSLocalizedString(@"Email", nil),
+                               nil] autorelease];
+        } else {
+                _shareActionsSheet = [[[UIActionSheet alloc] initWithTitle:nil delegate:self
+                                    cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil
+                                    otherButtonTitles:NSLocalizedString(@"LINE", nil),
+                                                      NSLocalizedString(@"twitter", nil),
+                                                      NSLocalizedString(@"facebook", nil),
+                               nil] autorelease];
+            
+        }
+        _shareActionsSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            // TODO
+            // add handling for ipad
+            [_shareActionsSheet showInView:self.view];
+        } else {
+            [_shareActionsSheet showInView:self.view];
+        }
+    }
+}
+
 - (void) deletePhoto {
     id <MWPhoto> photo = [self photoAtIndex:_currentPageIndex];
     [_delegate didClickDeleteButtonWithIndex:_currentPageIndex];
     NSLog( @"deletePhoto:%@",_photos);
+}
+
+-(void)postToSnsWithSnsType:(NSString *)snsType{
+    SNSPost *snsPost = [[SNSPost alloc] initWithSnsType:snsType];
+    id <MWPhoto> photo = [self photoAtIndex:_currentPageIndex];
+    [snsPost setLinePostTypeImage];
+    [snsPost setMessageBody:@""];
+    [snsPost addImageWithUIImage:[photo underlyingImage]];
+    [snsPost postWithCurrentViewController:self];
 }
 
 - (void)actuallyEmailPhoto:(id<MWPhoto>)photo {
