@@ -138,10 +138,6 @@
 
 -(void)_postBySocialFrameWork{
     
-    if (![SLComposeViewController isAvailableForServiceType:[self _slServiveType]]) {
-        return;
-    }
-    
     SLComposeViewController *slComposeViewController = [SLComposeViewController composeViewControllerForServiceType:[self _slServiveType]];
     
     [slComposeViewController setInitialText:_messageBody];
