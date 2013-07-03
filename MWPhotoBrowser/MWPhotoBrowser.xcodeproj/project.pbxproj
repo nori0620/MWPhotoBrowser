@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		0EA380331573EA4B003F4582 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0EA380321573EA4B003F4582 /* ImageIO.framework */; };
+		3B1EA7FA1784193500D43CFF /* SNSPost.h in Headers */ = {isa = PBXBuildFile; fileRef = 3B1EA7F91784193500D43CFF /* SNSPost.h */; };
+		3B1EA7FC1784194C00D43CFF /* SNSPost.m in Sources */ = {isa = PBXBuildFile; fileRef = 3B1EA7FB1784194C00D43CFF /* SNSPost.m */; };
 		4C6F96C814AF704100F8389A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C6F96C714AF704100F8389A /* Foundation.framework */; };
 		4C6F96E214AF70BD00F8389A /* MWCaptionView.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C6F96D614AF70BD00F8389A /* MWCaptionView.h */; };
 		4C6F96E314AF70BD00F8389A /* MWCaptionView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C6F96D714AF70BD00F8389A /* MWCaptionView.m */; };
@@ -47,6 +49,8 @@
 
 /* Begin PBXFileReference section */
 		0EA380321573EA4B003F4582 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
+		3B1EA7F91784193500D43CFF /* SNSPost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SNSPost.h; path = Libraries/SocialConnect/SNSPost.h; sourceTree = SOURCE_ROOT; };
+		3B1EA7FB1784194C00D43CFF /* SNSPost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SNSPost.m; path = Libraries/SocialConnect/SNSPost.m; sourceTree = SOURCE_ROOT; };
 		4C6F96C414AF704100F8389A /* libMWPhotoBrowser.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libMWPhotoBrowser.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C6F96C714AF704100F8389A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		4C6F96CB14AF704100F8389A /* MWPhotoBrowser-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MWPhotoBrowser-Prefix.pch"; sourceTree = SOURCE_ROOT; };
@@ -101,6 +105,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3B1EA7F4178418AB00D43CFF /* SocialConnect */ = {
+			isa = PBXGroup;
+			children = (
+				3B1EA7F91784193500D43CFF /* SNSPost.h */,
+				3B1EA7FB1784194C00D43CFF /* SNSPost.m */,
+			);
+			name = SocialConnect;
+			sourceTree = "<group>";
+		};
 		4C6F96B914AF704100F8389A = {
 			isa = PBXGroup;
 			children = (
@@ -162,6 +175,7 @@
 		4C6F96F014AF70E800F8389A /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				3B1EA7F4178418AB00D43CFF /* SocialConnect */,
 				4C6F96F214AF70FA00F8389A /* MBProgressHUD (3d5c3cc) */,
 				4C6F96F114AF70F500F8389A /* SDWebImage (b357e82) */,
 			);
@@ -237,6 +251,7 @@
 				4C6F971814AF711300F8389A /* UIButton+WebCache.h in Headers */,
 				4C6F971A14AF711300F8389A /* UIImageView+WebCache.h in Headers */,
 				4CB08BA314B1F38700730E9F /* MWPhotoProtocol.h in Headers */,
+				3B1EA7FA1784193500D43CFF /* SNSPost.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -304,6 +319,7 @@
 				4C6F971714AF711300F8389A /* SDWebImagePrefetcher.m in Sources */,
 				4C6F971914AF711300F8389A /* UIButton+WebCache.m in Sources */,
 				4C6F971B14AF711300F8389A /* UIImageView+WebCache.m in Sources */,
+				3B1EA7FC1784194C00D43CFF /* SNSPost.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
