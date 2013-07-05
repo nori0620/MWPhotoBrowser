@@ -44,7 +44,6 @@
 	UIToolbar *_toolbar;
 	NSTimer *_controlVisibilityTimer;
 	UIBarButtonItem *_previousButton, *_nextButton, *_actionButton, *_deleteButton;
-    UIActionSheet *_shareActionsSheet;
     UIActionSheet *_otherActionsSheet;
     UIActionSheet *_deleteActionsSheet;
     MBProgressHUD *_progressHUD;
@@ -1061,9 +1060,14 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
             
             // Sheet
             self.actionsSheet = [[[UIActionSheet alloc] initWithTitle:nil delegate:self
-                                                        cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil
-                                                        otherButtonTitles:NSLocalizedString(@"Save", nil), NSLocalizedString(@"Copy", nil),
-                                                        NSLocalizedString(@"Share", nil), nil] autorelease];
+                                                            cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil
+                                                            otherButtonTitles:
+                                                                              NSLocalizedString(@"Email", nil),
+                                                                              NSLocalizedString(@"facebook", nil),
+                                                                              NSLocalizedString(@"twitter", nil),
+                                                                              NSLocalizedString(@"LINE", nil),
+                                                                              NSLocalizedString(@"Save", nil),
+                                                            nil] autorelease];
             _otherActionsSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
             if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
                 [_otherActionsSheet showFromBarButtonItem:sender animated:YES];
@@ -1083,11 +1087,15 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
         self.actionsSheet = nil;
         if (buttonIndex != actionSheet.cancelButtonIndex) {
             if (buttonIndex == actionSheet.firstOtherButtonIndex) {
-                [self savePhoto]; return;
+                [self emailPhoto]; return;
             } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 1) {
-                [self copyPhoto]; return;	
+                [self postToSnsWithSnsType:@"facebook"]; return;
             } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 2) {
-                [self showSharePhotoActionSheet]; return;
+                [self postToSnsWithSnsType:@"twitter"]; return;
+            } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 3) {
+                [self postToSnsWithSnsType:@"line"]; return;
+            } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 4) {
+                [self savePhoto]; return;
             }
         }
     }
@@ -1095,20 +1103,6 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
         _deleteActionsSheet = nil;
         if( buttonIndex == 0){
             [self deletePhoto];
-        }
-    }
-    if (actionSheet == _shareActionsSheet) {
-        _shareActionsSheet = nil;
-        if (buttonIndex != actionSheet.cancelButtonIndex) {
-            if (buttonIndex == actionSheet.firstOtherButtonIndex) {
-                [self postToSnsWithSnsType:@"line"]; return;
-            } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 1) {
-                [self postToSnsWithSnsType:@"twitter"]; return;
-            } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 2) {
-                [self postToSnsWithSnsType:@"facebook"]; return;
-            } else if (buttonIndex == actionSheet.firstOtherButtonIndex + 3) {
-                [self emailPhoto]; return;
-            }
         }
     }
     [self hideControlsAfterDelay]; // Continue as normal...
@@ -1194,43 +1188,17 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 }
 
 - (void)emailPhoto {
+    if (![MFMailComposeViewController canSendMail]) {
+		UIAlertView *alert = [[[UIAlertView alloc] initWithTitle:NSLocalizedString(@"Email", nil)
+                                                         message:NSLocalizedString(@"You cant send Email on this device.", nil)
+                                                        delegate:nil cancelButtonTitle:NSLocalizedString(@"Dismiss", nil) otherButtonTitles:nil] autorelease];
+		[alert show];
+        return;
+    }
     id <MWPhoto> photo = [self photoAtIndex:_currentPageIndex];
     if ([photo underlyingImage]) {
         [self showProgressHUDWithMessage:[NSString stringWithFormat:@"%@\u2026" , NSLocalizedString(@"Preparing", @"Displayed with ellipsis as 'Preparing...' when an item is in the process of being prepared")]];
         [self performSelector:@selector(actuallyEmailPhoto:) withObject:photo afterDelay:0];
-    }
-}
-
-- (void)showSharePhotoActionSheet{
-    if (_shareActionsSheet) {
-        // Dismiss
-        [_shareActionsSheet dismissWithClickedButtonIndex:_shareActionsSheet.cancelButtonIndex animated:YES];
-    } else {
-        if ([MFMailComposeViewController canSendMail]) {
-                _shareActionsSheet = [[[UIActionSheet alloc] initWithTitle:nil delegate:self
-                                    cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil
-                                    otherButtonTitles:NSLocalizedString(@"LINE", nil),
-                                                      NSLocalizedString(@"twitter", nil),
-                                                      NSLocalizedString(@"facebook", nil),
-                                                      NSLocalizedString(@"Email", nil),
-                               nil] autorelease];
-        } else {
-                _shareActionsSheet = [[[UIActionSheet alloc] initWithTitle:nil delegate:self
-                                    cancelButtonTitle:NSLocalizedString(@"Cancel", nil) destructiveButtonTitle:nil
-                                    otherButtonTitles:NSLocalizedString(@"LINE", nil),
-                                                      NSLocalizedString(@"twitter", nil),
-                                                      NSLocalizedString(@"facebook", nil),
-                               nil] autorelease];
-            
-        }
-        _shareActionsSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
-        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
-            // TODO
-            // add handling for ipad
-            [_shareActionsSheet showInView:self.view];
-        } else {
-            [_shareActionsSheet showInView:self.view];
-        }
     }
 }
 
