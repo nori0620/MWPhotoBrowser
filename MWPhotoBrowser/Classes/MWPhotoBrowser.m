@@ -381,6 +381,11 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 
 - (void)viewWillAppear:(BOOL)animated {
     
+    if ( ![self _isUnderIOS7] ){
+        [self performSelector:@selector(setAutomaticallyAdjustsScrollViewInsets:)
+                   withObject:NO];
+    }
+    
 	// Super
 	[super viewWillAppear:animated];
 	
@@ -1243,5 +1248,12 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
     }
 	[self dismissModalViewControllerAnimated:YES];
 }
+
+- (BOOL) _isUnderIOS7 {
+    return  (
+         floor(NSFoundationVersionNumber) <= 993.0
+    );
+}
+
 
 @end
