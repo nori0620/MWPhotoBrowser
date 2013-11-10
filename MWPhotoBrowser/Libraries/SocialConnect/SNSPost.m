@@ -101,7 +101,7 @@
         sendImage = _image;
     }
     
-    UIPasteboard * board = [UIPasteboard pasteboardWithUniqueName];
+    UIPasteboard * board = [UIPasteboard generalPasteboard];
     [board setData:UIImagePNGRepresentation(sendImage) forPasteboardType:@"public.png"];
     NSString *urlStr = [NSString stringWithFormat:@"line://msg/image/%@", board.name];
     NSURL* url = [NSURL URLWithString:urlStr];
